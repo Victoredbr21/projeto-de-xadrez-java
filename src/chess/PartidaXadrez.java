@@ -32,7 +32,7 @@ public class PartidaXadrez {
     private void iniciarTabuleiro() {
         tabuleiro.lugarDaPeca(new Torre(tabuleiro, Cor.BRANCO), new Posicao(2,1));
         tabuleiro.lugarDaPeca(new Rei(tabuleiro, Cor.PRETO), new Posicao(0,4));
-        tabuleiro.lugarDaPeca(new Rei(tabuleiro, Cor.BRANCO), new Posicao(7,4));
+        tabuleiro.lugarDaPeca(new Rei(tabuleiro, Cor.BRANCO), new Posicao(0,4));
     }
 
 } //marcador
