@@ -1,6 +1,10 @@
 package chess;
 
+import boardgame.Posicao;
 import boardgame.Tabuleiro;
+import chess.pecas.Rei;
+import chess.pecas.Torre;
+import chess.Cor;
 
 public class PartidaXadrez {
   private Tabuleiro tabuleiro;
@@ -9,6 +13,7 @@ public class PartidaXadrez {
 
     public PartidaXadrez() {
         tabuleiro = new Tabuleiro(8,8);
+        iniciarTabuleiro();
     }
 
     //metodos
@@ -22,6 +27,12 @@ public class PartidaXadrez {
             }
         }
         return mat;
+    }
+
+    private void iniciarTabuleiro() {
+        tabuleiro.lugarDaPeca(new Torre(tabuleiro, Cor.BRANCO), new Posicao(2,1));
+        tabuleiro.lugarDaPeca(new Rei(tabuleiro, Cor.PRETO), new Posicao(0,4));
+        tabuleiro.lugarDaPeca(new Rei(tabuleiro, Cor.BRANCO), new Posicao(7,4));
     }
 
 } //marcador

@@ -38,4 +38,11 @@ private Peca[][] pecas;
         return pecas[posicao.getLinha()][posicao.getColuna()];
     }
 
+    //metodos
+
+    public void lugarDaPeca(Peca peca, Posicao posicao) {
+        pecas[posicao.getLinha()][posicao.getColuna()] = peca;  //atribuicao da pecas para o peca da função, tipo o this.peca so que com arrays dimensionais
+        peca.posicao = posicao;
+    }
+
 }// marcador

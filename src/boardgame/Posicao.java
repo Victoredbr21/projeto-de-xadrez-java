@@ -29,6 +29,7 @@ public class Posicao {
             this.coluna = coluna;
         }
 
+        //to string
 @Override
     public String toString() {
         return  linha + "," + coluna;
