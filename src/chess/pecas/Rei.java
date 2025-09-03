@@ -11,7 +11,8 @@ public class Rei extends PecaXadrez {
 
     // Construtor
     public Rei(Tabuleiro tabuleiro, Cor cor) {
-        super(tabuleiro, cor);
+
+        super(tabuleiro, Cor);
     }
 
     @Override
