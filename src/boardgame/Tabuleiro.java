@@ -7,7 +7,7 @@ private Peca[][] pecas;
 
     //construtor
     public Tabuleiro(int linha, int coluna) {
-        if (linhas < 1 || colunas < 1) {
+        if (linha < 1 || coluna < 1) {
         throw new BoardException("Erro criando tabuleiro: É necessário que haja pelo menos 1 linha e 1 coluna.");
         }
         this.linhas = linha;
@@ -41,7 +41,7 @@ private Peca[][] pecas;
     //metodos
 
     public void lugarDaPeca(Peca peca, Posicao posicao) {
-        if (!issoEumaPeca(posicao)) {
+        if (issoEumaPeca(posicao)) {
             throw new BoardException("Já existe uma peça na posição" + posicao);
         }
         pecas[posicao.getLinha()][posicao.getColuna()] = peca;  //atribuicao da pecas para o peca da função, tipo o this.peca so que com arrays dimensionais

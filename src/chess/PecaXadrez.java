@@ -5,17 +5,17 @@ import boardgame.Tabuleiro;
 
 import java.awt.*;
 
-public class PecaXadrez extends Peca {
-    private Color color;
+public abstract class PecaXadrez extends Peca {
+    private Cor cor;
 
-    //construtor
-    public PecaXadrez(Tabuleiro tabuleiro, Color color) {
-        super (Tabuleiro);
-        this.color = color;
-    }
-    //getter
-    public Color getColor() {
-        return color;
+    // construtor
+    public PecaXadrez(Tabuleiro tabuleiro, Cor cor) {
+        super(tabuleiro);
+        this.cor = cor;
     }
 
+    // getter
+    public Cor getCor() {
+        return cor;
+    }
 }//marcador
