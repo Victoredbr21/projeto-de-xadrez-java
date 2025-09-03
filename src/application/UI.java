@@ -2,8 +2,11 @@ package application;
 
 import chess.Cor;
 import chess.PecaXadrez;
+import chess.PosicaoXadrez;
 
 import java.awt.*;
+import java.util.InputMismatchException;
+import java.util.Scanner;
 
 
 public class UI {
@@ -32,6 +35,18 @@ public class UI {
     public static final String ANSI_WHITE_BACKGROUND = "\u001B[47m";
 
     //metodos
+
+    public static PosicaoXadrez lerPosicaoXadrez(Scanner sc) {
+        try {
+            String s = sc.nextLine();
+            char coluna = s.charAt(0);
+            int linha = Integer.parseInt(s.substring(1));
+            return new PosicaoXadrez(coluna, linha);
+        }
+        catch (Exception e) {
+            throw new InputMismatchException("Erros lendo posição de Xadrez, valores válidos são de a1 a h8.");
+        }
+    }
 
     // aqui imprime o tabuleiro
     public static void imprimirTabuleiro(PecaXadrez[][] pecas){

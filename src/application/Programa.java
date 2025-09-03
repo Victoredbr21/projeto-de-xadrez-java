@@ -1,14 +1,26 @@
 package application;
 import boardgame.*;
 import chess.PartidaXadrez;
+import chess.PecaXadrez;
+import chess.PosicaoXadrez;
+
+import java.util.Scanner;
 
 public class Programa {
         public static void main(String[] args) {
+            Scanner sc = new Scanner(System.in);
+            PartidaXadrez partida = new PartidaXadrez();       // inicia a partida
+            while(true) { //um while para o jogo entrar em loop até o cheque mate finalizar
+                UI.imprimirTabuleiro(partida.getPecas());
+                System.out.println("Posicão de origem: ");
+                PosicaoXadrez fonte = UI.lerPosicaoXadrez(sc);     //aqui o usuario vai escolher a peca
 
-            PartidaXadrez partida = new PartidaXadrez();
+                System.out.println();
+                System.out.println("Destino: ");
+                PosicaoXadrez destino = UI.lerPosicaoXadrez(sc);     //aqui o usuario vai dizer a onde ele quer parar
 
-            UI.imprimirTabuleiro(partida.getPecas());
-
+                PecaXadrez pecaCapturada = partida.performMovXadrez(fonte, destino);
+            }
         } //marcador
     } // marcador
 

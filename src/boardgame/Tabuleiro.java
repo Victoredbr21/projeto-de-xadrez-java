@@ -47,6 +47,20 @@ private Peca[][] pecas;
         pecas[posicao.getLinha()][posicao.getColuna()] = peca;  //atribuicao da pecas para o peca da função, tipo o this.peca so que com arrays dimensionais
         peca.posicao = posicao;
     }
+
+    public Peca removePeca(Posicao posicao) {
+        if  (!posicaoExistentes(posicao)) {
+            throw new BoardException("Posição não está no tabuleiro.");
+        }
+        if (peca(posicao) == null ) {
+         return null;
+        }
+        Peca aux = peca(posicao);
+        aux.posicao = null;
+        pecas[posicao.getLinha()][posicao.getColuna()] = null;
+        return aux;
+    }
+
     private boolean posicaoExistentes(int linha, int coluna) {
        return linha >= 0 && linha < linhas && coluna >= 0 && coluna < colunas;
     }
