@@ -36,6 +36,11 @@ public class UI {
 
     //metodos
 
+ public static void limparTela(){
+     System.out.println("\033[H\033[2J");
+     System.out.flush();
+ }
+
     public static PosicaoXadrez lerPosicaoXadrez(Scanner sc) {
         try {
             String s = sc.nextLine();
