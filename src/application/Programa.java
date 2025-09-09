@@ -15,7 +15,7 @@ public class Programa {
             while(true) {//um while para o jogo entrar em loop até o cheque mate finalizar
                 try {
                     UI.limparTela();
-                    UI.imprimirTabuleiro(partida.getPecas());
+                    UI.imprimirPartida(partida);
                     System.out.println("Posicão de origem: ");
                     PosicaoXadrez fonte = UI.lerPosicaoXadrez(sc);     //aqui o usuario vai escolher a peca
 
