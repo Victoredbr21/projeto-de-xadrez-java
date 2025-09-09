@@ -30,6 +30,12 @@ public class PartidaXadrez {
         return mat;
     }
 
+        public boolean[][] possiveisMovimentos(PosicaoXadrez fontePosicao){
+        Posicao posicao = fontePosicao.naPosicao();
+        validarFonteDaPosicao(posicao);
+        return tabuleiro.peca(posicao).possiveisMovimentos();
+        }
+
     public PecaXadrez performMovXadrez(PosicaoXadrez fontePosicao, PosicaoXadrez targetPosicao ){   //criando a funcionalidade da peca de xadrez
         Posicao fonte = fontePosicao.naPosicao();     // localizacao da peca
         Posicao target = targetPosicao.naPosicao();   // alvo onde a peca vai
@@ -57,7 +63,7 @@ public class PartidaXadrez {
     }
 
     private void validarTargetPosicao(Posicao fonte, Posicao target){
-        if (!tabuleiro.peca(fonte).ePossivelMover(target)) {
+        if (!tabuleiro.peca(fonte).possiveisMovimentos(target)) {
            throw new ChessExection("A peça escolhida não pode mover para o destino escolhido");
         }
     }

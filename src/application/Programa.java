@@ -19,6 +19,10 @@ public class Programa {
                     System.out.println("Posicão de origem: ");
                     PosicaoXadrez fonte = UI.lerPosicaoXadrez(sc);     //aqui o usuario vai escolher a peca
 
+                    boolean [][] possiveisMovimentos = partida.possiveisMovimentos(fonte);
+                    UI.limparTela();
+                    UI.imprimirTabuleiro(partida.getPecas(), possiveisMovimentos); //sobrecarga
+
                     System.out.println();
                     System.out.println("Destino: ");
                     PosicaoXadrez destino = UI.lerPosicaoXadrez(sc);     //aqui o usuario vai dizer a onde ele quer parar

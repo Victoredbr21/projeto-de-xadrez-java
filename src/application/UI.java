@@ -58,17 +58,31 @@ public class UI {
     for (int i=0;i<pecas.length;i++){   // primeiro for para percorrer as pecas
         System.out.print((8 - i) + " ");
         for (int j=0;j<pecas.length;j++){  // segundo for apra percorrer a outra array
-            imprimirUmaPeca(pecas[i][j]);
+            imprimirUmaPeca(pecas[i][j], false);
         }
         System.out.println();           // quebra de linha que eu fiz para o tabuleiro
       }
         System.out.println("  a b c d e f g h");
     }
+    //sobrecarga recebendo o possiveis movimentos
+    public static void imprimirTabuleiro(PecaXadrez[][] pecas, boolean[][] possiveisMovimentos){
+        for (int i=0;i<pecas.length;i++){   // primeiro for para percorrer as pecas
+            System.out.print((8 - i) + " ");
+            for (int j=0;j<pecas.length;j++){  // segundo for apra percorrer a outra array
+                imprimirUmaPeca(pecas[i][j], possiveisMovimentos[i][j]);
+            }
+            System.out.println();           // quebra de linha que eu fiz para o tabuleiro
+        }
+        System.out.println("  a b c d e f g h");
+    }
 
-public static void imprimirUmaPeca(PecaXadrez peca){
+public static void imprimirUmaPeca(PecaXadrez peca, boolean fundo){
+     if (fundo){
+         System.out.println(ANSI_BLUE_BACKGROUND);
+     }
 
         if (peca == null) {      // null é o valor da casa vazia entao se uma peca for null ela vai mostrar como -
-            System.out.println("-");
+            System.out.println("-" + ANSI_RESET);
         }  else {
             if (peca.getCor() == Cor.BRANCO) {         // caso contrario ele imprime a peca
                 System.out.print(ANSI_WHITE + peca + ANSI_RESET);
