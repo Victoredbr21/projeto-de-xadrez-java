@@ -7,12 +7,16 @@ import chess.pecas.Rei;
 import chess.pecas.Torre;
 import chess.Cor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PartidaXadrez {
   private int turno;
   private Tabuleiro tabuleiro;
   private Cor jogadorAtual;
 
-
+  private List<Peca> pecasNoTabuleiro = new ArrayList<>();
+    private List<Peca> pecasCapturadas = new ArrayList<>();
   //construtor
 
     public PartidaXadrez() {
@@ -63,6 +67,12 @@ public class PartidaXadrez {
         Peca p = tabuleiro.removePeca(fonte);
         Peca pecaCapturada = tabuleiro.removePeca(target);  // a peca que foi capturada eu removo
         tabuleiro.lugarDaPeca(p, target);
+
+        if (pecaCapturada != null) {
+           pecasNoTabuleiro.remove(pecaCapturada);
+           pecasCapturadas.add(pecaCapturada);
+        }
+
         return  pecaCapturada;
 
     }
@@ -92,6 +102,7 @@ public class PartidaXadrez {
 
     private void  lugarDaNovaPeca(char coluna, int linha, PecaXadrez peca) {
         tabuleiro.lugarDaPeca(peca, new PosicaoXadrez(coluna, linha).naPosicao());
+        pecasNoTabuleiro.add(peca);
     }
 
     private void iniciarConfiguracao() {
