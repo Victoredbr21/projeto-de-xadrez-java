@@ -24,4 +24,9 @@ public class Rei extends PecaXadrez {
             return "♔"; // preta visualmente “branca”
         }
     }
+    @Override
+    public boolean[][] possiveisMovimentos() {
+        boolean[][] mat = new boolean[getTabuleiro().getLinha()][getTabuleiro().getColuna()];
+        return mat;
+    }
 }

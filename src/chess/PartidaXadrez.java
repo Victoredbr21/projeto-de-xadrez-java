@@ -50,6 +50,9 @@ public class PartidaXadrez {
         if (!tabuleiro.issoEumaPeca(posicao)){
          throw new ChessExection("Não existe peça na fonte da posição");          //valido a fonte da posicao se der pau provoco um erro aqui
         }
+        if(!tabuleiro.peca(posicao).ePossivelMover()) {
+            throw new ChessExection("Não existe movimentos possíveis para a peça escolhido");
+        }
     }
 
     private void  lugarDaNovaPeca(char coluna, int linha, PecaXadrez peca) {
