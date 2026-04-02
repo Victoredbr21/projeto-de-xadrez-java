@@ -7,22 +7,31 @@ import chess.PecaXadrez;
 
 public class Peao extends PecaXadrez {
 
-    // flag que controla se é o primeiro movimento do peão
-    // usada para liberar o movimento duplo inicial
+    // controla se é o primeiro movimento — libera o avanço duplo
     private boolean primeirMovimento = true;
+
+    // guarda se esse peão acabou de fazer o avanço duplo
+    // usado pela PartidaXadrez para verificar en passant do adversário
+    private boolean enPassantVulneravel = false;
 
     public Peao(Tabuleiro tabuleiro, Cor cor) {
         super(tabuleiro, cor);
     }
 
-    // getter para a PartidaXadrez saber se pode fazer roque/en passant depois
     public boolean isPrimeirMovimento() {
         return primeirMovimento;
     }
 
-    // chamado pela PartidaXadrez após o peão se mover pela primeira vez
     public void realizouPrimeirMovimento() {
         this.primeirMovimento = false;
+    }
+
+    public boolean isEnPassantVulneravel() {
+        return enPassantVulneravel;
+    }
+
+    public void setEnPassantVulneravel(boolean enPassantVulneravel) {
+        this.enPassantVulneravel = enPassantVulneravel;
     }
 
     @Override
@@ -33,7 +42,6 @@ public class Peao extends PecaXadrez {
     @Override
     public boolean[][] possiveisMovimentos() {
         boolean[][] mat = new boolean[getTabuleiro().getLinha()][getTabuleiro().getColuna()];
-
         Posicao p = new Posicao(0, 0);
 
         // ===================================================
@@ -41,64 +49,96 @@ public class Peao extends PecaXadrez {
         // ===================================================
         if (getCor() == Cor.BRANCO) {
 
-            // --- 1 casa pra frente ---
-            // peão SÓ anda pra frente se a casa estiver VAZIA
-            // (diferente das outras peças que capturam pra frente)
+            // 1 casa pra frente — só se vazia
             p.setValores(posicao.getLinha() - 1, posicao.getColuna());
             if (getTabuleiro().posicaoExistentes(p) && !getTabuleiro().issoEumaPeca(p)) {
                 mat[p.getLinha()][p.getColuna()] = true;
 
-                // --- 2 casas pra frente (só no primeiro movimento) ---
-                // só verifica o duplo se a primeira casa já estiver livre
-                // (não pode pular por cima de uma peça)
+                // 2 casas pra frente — só no primeiro movimento e se ambas vazias
                 p.setValores(posicao.getLinha() - 2, posicao.getColuna());
                 if (getTabuleiro().posicaoExistentes(p) && !getTabuleiro().issoEumaPeca(p) && primeirMovimento) {
                     mat[p.getLinha()][p.getColuna()] = true;
                 }
             }
 
-            // --- captura diagonal esquerda ---
-            // peão SÓ captura na diagonal — nunca pra frente
+            // captura diagonal esquerda — só se tiver adversária
             p.setValores(posicao.getLinha() - 1, posicao.getColuna() - 1);
             if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) {
                 mat[p.getLinha()][p.getColuna()] = true;
             }
 
-            // --- captura diagonal direita ---
+            // captura diagonal direita — só se tiver adversária
             p.setValores(posicao.getLinha() - 1, posicao.getColuna() + 1);
             if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) {
                 mat[p.getLinha()][p.getColuna()] = true;
+            }
+
+            // en passant esquerda
+            // o peão adversário está na mesma linha, coluna à esquerda
+            // e ficou vulnerável ao en passant (fez avanço duplo no turno anterior)
+            p.setValores(posicao.getLinha(), posicao.getColuna() - 1);
+            if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) {
+                PecaXadrez candidato = (PecaXadrez) getTabuleiro().peca(p);
+                if (candidato instanceof Peao && ((Peao) candidato).isEnPassantVulneravel()) {
+                    mat[posicao.getLinha() - 1][posicao.getColuna() - 1] = true;
+                }
+            }
+
+            // en passant direita
+            p.setValores(posicao.getLinha(), posicao.getColuna() + 1);
+            if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) {
+                PecaXadrez candidato = (PecaXadrez) getTabuleiro().peca(p);
+                if (candidato instanceof Peao && ((Peao) candidato).isEnPassantVulneravel()) {
+                    mat[posicao.getLinha() - 1][posicao.getColuna() + 1] = true;
+                }
             }
         }
 
         // ===================================================
         // PEÃO PRETO — anda para baixo (linha aumenta)
-        // espelho exato do branco, só inverte o sinal da linha
         // ===================================================
         else {
 
-            // --- 1 casa pra frente ---
+            // 1 casa pra frente
             p.setValores(posicao.getLinha() + 1, posicao.getColuna());
             if (getTabuleiro().posicaoExistentes(p) && !getTabuleiro().issoEumaPeca(p)) {
                 mat[p.getLinha()][p.getColuna()] = true;
 
-                // --- 2 casas pra frente (só no primeiro movimento) ---
+                // 2 casas pra frente
                 p.setValores(posicao.getLinha() + 2, posicao.getColuna());
                 if (getTabuleiro().posicaoExistentes(p) && !getTabuleiro().issoEumaPeca(p) && primeirMovimento) {
                     mat[p.getLinha()][p.getColuna()] = true;
                 }
             }
 
-            // --- captura diagonal esquerda ---
+            // captura diagonal esquerda
             p.setValores(posicao.getLinha() + 1, posicao.getColuna() - 1);
             if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) {
                 mat[p.getLinha()][p.getColuna()] = true;
             }
 
-            // --- captura diagonal direita ---
+            // captura diagonal direita
             p.setValores(posicao.getLinha() + 1, posicao.getColuna() + 1);
             if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) {
                 mat[p.getLinha()][p.getColuna()] = true;
+            }
+
+            // en passant esquerda
+            p.setValores(posicao.getLinha(), posicao.getColuna() - 1);
+            if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) {
+                PecaXadrez candidato = (PecaXadrez) getTabuleiro().peca(p);
+                if (candidato instanceof Peao && ((Peao) candidato).isEnPassantVulneravel()) {
+                    mat[posicao.getLinha() + 1][posicao.getColuna() - 1] = true;
+                }
+            }
+
+            // en passant direita
+            p.setValores(posicao.getLinha(), posicao.getColuna() + 1);
+            if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) {
+                PecaXadrez candidato = (PecaXadrez) getTabuleiro().peca(p);
+                if (candidato instanceof Peao && ((Peao) candidato).isEnPassantVulneravel()) {
+                    mat[posicao.getLinha() + 1][posicao.getColuna() + 1] = true;
+                }
             }
         }
 

@@ -7,8 +7,19 @@ import chess.PecaXadrez;
 
 public class Torre extends PecaXadrez {
 
+    // flag para saber se a Torre já se moveu — impede o roque se true
+    private boolean primeirMovimento = true;
+
     public Torre(Tabuleiro tabuleiro, Cor cor) {
         super(tabuleiro, cor);
+    }
+
+    public boolean isPrimeirMovimento() {
+        return primeirMovimento;
+    }
+
+    public void realizouPrimeirMovimento() {
+        this.primeirMovimento = false;
     }
 
     @Override
@@ -25,41 +36,33 @@ public class Torre extends PecaXadrez {
         p.setValores(posicao.getLinha() - 1, posicao.getColuna());
         while (getTabuleiro().posicaoExistentes(p) && !getTabuleiro().issoEumaPeca(p)) {
             mat[p.getLinha()][p.getColuna()] = true;
-            p.setLinha(p.getLinha() - 1);
+            p.setValores(p.getLinha() - 1, p.getColuna());
         }
-        if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) {
-            mat[p.getLinha()][p.getColuna()] = true;
-        }
+        if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) mat[p.getLinha()][p.getColuna()] = true;
 
         // abaixo
         p.setValores(posicao.getLinha() + 1, posicao.getColuna());
         while (getTabuleiro().posicaoExistentes(p) && !getTabuleiro().issoEumaPeca(p)) {
             mat[p.getLinha()][p.getColuna()] = true;
-            p.setLinha(p.getLinha() + 1);
+            p.setValores(p.getLinha() + 1, p.getColuna());
         }
-        if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) {
-            mat[p.getLinha()][p.getColuna()] = true;
-        }
+        if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) mat[p.getLinha()][p.getColuna()] = true;
 
         // esquerda
         p.setValores(posicao.getLinha(), posicao.getColuna() - 1);
         while (getTabuleiro().posicaoExistentes(p) && !getTabuleiro().issoEumaPeca(p)) {
             mat[p.getLinha()][p.getColuna()] = true;
-            p.setColuna(p.getColuna() - 1);
+            p.setValores(p.getLinha(), p.getColuna() - 1);
         }
-        if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) {
-            mat[p.getLinha()][p.getColuna()] = true;
-        }
+        if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) mat[p.getLinha()][p.getColuna()] = true;
 
         // direita
         p.setValores(posicao.getLinha(), posicao.getColuna() + 1);
         while (getTabuleiro().posicaoExistentes(p) && !getTabuleiro().issoEumaPeca(p)) {
             mat[p.getLinha()][p.getColuna()] = true;
-            p.setColuna(p.getColuna() + 1);
+            p.setValores(p.getLinha(), p.getColuna() + 1);
         }
-        if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) {
-            mat[p.getLinha()][p.getColuna()] = true;
-        }
+        if (getTabuleiro().posicaoExistentes(p) && eUmaPecaAdversaria(p)) mat[p.getLinha()][p.getColuna()] = true;
 
         return mat;
     }
