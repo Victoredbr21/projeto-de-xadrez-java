@@ -1,5 +1,5 @@
 package application;
-import boardgame.*;
+
 import chess.ChessExection;
 import chess.PartidaXadrez;
 import chess.PecaXadrez;
@@ -11,42 +11,53 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Programa {
-        public static void main(String[] args) {
-            Scanner sc = new Scanner(System.in);
-            PartidaXadrez partida = new PartidaXadrez();       // inicia a partida
-            List<PecaXadrez> capturada = new ArrayList<>();
-            while(true) {//um while para o jogo entrar em loop até o cheque mate finalizar
-                try {
-                    UI.limparTela();
-                    UI.imprimirPartida(partida, capturada);
-                    System.out.println("Posicão de origem: ");
-                    PosicaoXadrez fonte = UI.lerPosicaoXadrez(sc);     //aqui o usuario vai escolher a peca
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        PartidaXadrez partida = new PartidaXadrez();
+        List<PecaXadrez> capturada = new ArrayList<>();
 
-                    boolean [][] possiveisMovimentos = partida.possiveisMovimentos(fonte);
-                    UI.limparTela();
-                    UI.imprimirTabuleiro(partida.getPecas(), possiveisMovimentos); //sobrecarga
+        while (!partida.isCheckMate()) {
+            try {
+                UI.limparTela();
+                UI.imprimirPartida(partida, capturada);
 
-                    System.out.println();
-                    System.out.println("Destino: ");
-                    PosicaoXadrez destino = UI.lerPosicaoXadrez(sc);     //aqui o usuario vai dizer a onde ele quer parar
+                System.out.println("Posição de origem: ");
+                PosicaoXadrez fonte = UI.lerPosicaoXadrez(sc);
 
-                    PecaXadrez pecaCapturada = partida.performMovXadrez(fonte, destino);
+                boolean[][] possiveisMovimentos = partida.possiveisMovimentos(fonte);
+                UI.limparTela();
+                UI.imprimirTabuleiro(partida.getPecas(), possiveisMovimentos);
 
-                    if(pecaCapturada != null) {
-                        capturada.add(pecaCapturada);
+                System.out.println();
+                System.out.println("Destino: ");
+                PosicaoXadrez destino = UI.lerPosicaoXadrez(sc);
+
+                PecaXadrez pecaCapturada = partida.performMovXadrez(fonte, destino);
+                if (pecaCapturada != null) capturada.add(pecaCapturada);
+
+                // se há promoção pendente, pede a escolha do jogador
+                if (partida.getPromovido() != null) {
+                    System.out.println("Peão promovido! Escolha a peça (Q/T/B/C): ");
+                    String tipo = sc.nextLine().toUpperCase();
+                    while (!tipo.equals("Q") && !tipo.equals("T") && !tipo.equals("B") && !tipo.equals("C")) {
+                        System.out.println("Opção inválida! Digite Q, T, B ou C: ");
+                        tipo = sc.nextLine().toUpperCase();
                     }
-
-                } catch (ChessExection e) {
-                    System.out.println(e.getMessage());
-                    sc.nextLine();
+                    partida.substituirPecaPromovida(tipo);
                 }
 
-                catch (InputMismatchException e) {
-                    System.out.println(e.getMessage());
-                    sc.nextLine();
-                }
-
+            } catch (ChessExection e) {
+                System.out.println(e.getMessage());
+                sc.nextLine();
+            } catch (InputMismatchException e) {
+                System.out.println(e.getMessage());
+                sc.nextLine();
             }
-        } //marcador
-    } // marcador
+        }
 
+        // fim de jogo
+        UI.limparTela();
+        UI.imprimirPartida(partida, capturada);
+        System.out.println("XEQUE-MATE! Vencedor: " + partida.getJogadorAtual());
+    }
+}
