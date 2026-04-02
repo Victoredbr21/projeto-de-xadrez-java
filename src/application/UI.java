@@ -5,19 +5,13 @@ import chess.PartidaXadrez;
 import chess.PecaXadrez;
 import chess.PosicaoXadrez;
 
-import java.awt.*;
 import java.util.Arrays;
 import java.util.InputMismatchException;
+import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
-import java.util.List;
-
 
 public class UI {
-
-
-
-    // https://stackoverflow.com/questions/5762491/how-to-print-color-in-console-using-system-out-println
 
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_BLACK = "\u001B[30m";
@@ -38,12 +32,11 @@ public class UI {
     public static final String ANSI_CYAN_BACKGROUND = "\u001B[46m";
     public static final String ANSI_WHITE_BACKGROUND = "\u001B[47m";
 
-    //metodos
-
- public static void limparTela(){
-     System.out.println("\033[H\033[2J");
-     System.out.flush();
- }
+    // limpa o terminal
+    public static void limparTela() {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+    }
 
     public static PosicaoXadrez lerPosicaoXadrez(Scanner sc) {
         try {
@@ -51,73 +44,89 @@ public class UI {
             char coluna = s.charAt(0);
             int linha = Integer.parseInt(s.substring(1));
             return new PosicaoXadrez(coluna, linha);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new InputMismatchException("Erros lendo posição de Xadrez, valores válidos são de a1 a h8.");
         }
     }
+
     public static void imprimirPartida(PartidaXadrez partida, List<PecaXadrez> capturada) {
-    imprimirTabuleiro(partida.getPecas());
-    imprimirPecasCapturadas(capturada);
-    System.out.println();
-    System.out.println("Turno : " + partida.getTurno());
-    System.out.println("Esperando o jogador" + partida.getJogadorAtual());
+        imprimirTabuleiro(partida.getPecas());
+        imprimirPecasCapturadas(capturada);
+        System.out.println();
+        System.out.println("Turno : " + partida.getTurno());
+
+        // exibe xeque-mate se o jogo acabou
+        if (partida.isCheckMate()) {
+            System.out.println("XEQUE-MATE!");
+            System.out.println("Vencedor: " + partida.getJogadorAtual());
+        } else {
+            System.out.println("Esperando o jogador: " + partida.getJogadorAtual());
+            // avisa se o jogador atual está em xeque
+            if (partida.isCheck()) {
+                System.out.println(ANSI_RED + "*** EM XEQUE! ***" + ANSI_RESET);
+            }
+        }
     }
 
-    // aqui imprime o tabuleiro
-    public static void imprimirTabuleiro(PecaXadrez[][] pecas){
-    for (int i=0;i<pecas.length;i++){   // primeiro for para percorrer as pecas
-        System.out.print((8 - i) + " ");
-        for (int j=0;j<pecas.length;j++){  // segundo for apra percorrer a outra array
-            imprimirUmaPeca(pecas[i][j], false);
+    // imprime o tabuleiro sem destacar movimentos
+    public static void imprimirTabuleiro(PecaXadrez[][] pecas) {
+        for (int i = 0; i < pecas.length; i++) {
+            System.out.print((8 - i) + " ");
+            for (int j = 0; j < pecas.length; j++) {
+                imprimirUmaPeca(pecas[i][j], false);
+            }
+            System.out.println();
         }
-        System.out.println();           // quebra de linha que eu fiz para o tabuleiro
-      }
         System.out.println("  a b c d e f g h");
     }
-    //sobrecarga recebendo o possiveis movimentos
-    public static void imprimirTabuleiro(PecaXadrez[][] pecas, boolean[][] possiveisMovimentos){
-        for (int i=0;i<pecas.length;i++){   // primeiro for para percorrer as pecas
+
+    // sobrecarga — imprime o tabuleiro destacando os possíveis movimentos em azul
+    public static void imprimirTabuleiro(PecaXadrez[][] pecas, boolean[][] possiveisMovimentos) {
+        for (int i = 0; i < pecas.length; i++) {
             System.out.print((8 - i) + " ");
-            for (int j=0;j<pecas.length;j++){  // segundo for apra percorrer a outra array
+            for (int j = 0; j < pecas.length; j++) {
                 imprimirUmaPeca(pecas[i][j], possiveisMovimentos[i][j]);
             }
-            System.out.println();           // quebra de linha que eu fiz para o tabuleiro
+            System.out.println();
         }
         System.out.println("  a b c d e f g h");
     }
 
-public static void imprimirUmaPeca(PecaXadrez peca, boolean fundo){
-     if (fundo){
-         System.out.println(ANSI_BLUE_BACKGROUND);
-     }
+    public static void imprimirUmaPeca(PecaXadrez peca, boolean fundo) {
+        // FIX: era println (quebrava a linha no meio do tabuleiro), agora é print
+        if (fundo) {
+            System.out.print(ANSI_BLUE_BACKGROUND);
+        }
 
-        if (peca == null) {      // null é o valor da casa vazia entao se uma peca for null ela vai mostrar como -
-            System.out.println("-" + ANSI_RESET);
-        }  else {
-            if (peca.getCor() == Cor.BRANCO) {         // caso contrario ele imprime a peca
+        if (peca == null) {
+            // FIX: era println (quebrava a linha), agora é print
+            System.out.print("-" + ANSI_RESET);
+        } else {
+            if (peca.getCor() == Cor.BRANCO) {
                 System.out.print(ANSI_WHITE + peca + ANSI_RESET);
-            }
-            else {
+            } else {
                 System.out.print(ANSI_YELLOW + peca + ANSI_RESET);
             }
         }
-    System.out.print(" ");
+        System.out.print(" ");
+    }
 
+    private static void imprimirPecasCapturadas(List<PecaXadrez> capturada) {
+        List<PecaXadrez> branca = capturada.stream()
+                .filter(x -> x.getCor() == Cor.BRANCO)
+                .collect(Collectors.toList());
+        List<PecaXadrez> preto = capturada.stream()
+                .filter(x -> x.getCor() == Cor.PRETO)
+                .collect(Collectors.toList());
+
+        System.out.println("Peças capturadas:");
+        System.out.print("Brancas: ");
+        System.out.print(ANSI_WHITE);
+        System.out.println(Arrays.toString(branca.toArray()));
+        System.out.println(ANSI_RESET);
+        System.out.print("Pretas: ");
+        System.out.print(ANSI_YELLOW);
+        System.out.println(Arrays.toString(preto.toArray()));
+        System.out.println(ANSI_RESET);
+    }
 }
-
-private static void imprimirPecasCapturadas(List<PecaXadrez> capturada) {
-    List<PecaXadrez> branca = capturada.stream().filter(x -> x.getCor() == Cor.BRANCO).collect(Collectors.toList());
-    List<PecaXadrez> preto = capturada.stream().filter(x -> x.getCor() == Cor.PRETO).collect(Collectors.toList());
-    System.out.println("Peças capturadas:");
-    System.out.print("Brancas");
-    System.out.print(ANSI_WHITE);
-    System.out.println(Arrays.toString(branca.toArray()));
-    System.out.println(ANSI_RESET);
-    System.out.println("Pretas:");
-    System.out.print(ANSI_YELLOW);
-    System.out.println(Arrays.toString(preto.toArray()));
-    System.out.println(ANSI_RESET);
-}
-
-}//fecha classe
