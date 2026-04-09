@@ -55,13 +55,11 @@ public class UI {
         System.out.println();
         System.out.println("Turno : " + partida.getTurno());
 
-        // exibe xeque-mate se o jogo acabou
         if (partida.isCheckMate()) {
             System.out.println("XEQUE-MATE!");
             System.out.println("Vencedor: " + partida.getJogadorAtual());
         } else {
             System.out.println("Esperando o jogador: " + partida.getJogadorAtual());
-            // avisa se o jogador atual está em xeque
             if (partida.isCheck()) {
                 System.out.println(ANSI_RED + "*** EM XEQUE! ***" + ANSI_RESET);
             }
@@ -93,13 +91,10 @@ public class UI {
     }
 
     public static void imprimirUmaPeca(PecaXadrez peca, boolean fundo) {
-        // FIX: era println (quebrava a linha no meio do tabuleiro), agora é print
         if (fundo) {
             System.out.print(ANSI_BLUE_BACKGROUND);
         }
-
         if (peca == null) {
-            // FIX: era println (quebrava a linha), agora é print
             System.out.print("-" + ANSI_RESET);
         } else {
             if (peca.getCor() == Cor.BRANCO) {
@@ -109,6 +104,28 @@ public class UI {
             }
         }
         System.out.print(" ");
+    }
+
+    /**
+     * ✨ NOVO: retorna o estado do tabuleiro como String (sem ANSI),
+     * para ser enviado no prompt das IAs.
+     */
+    public static String getBoardAsString(PecaXadrez[][] pecas) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < pecas.length; i++) {
+            sb.append((8 - i)).append(" ");
+            for (int j = 0; j < pecas.length; j++) {
+                if (pecas[i][j] == null) {
+                    sb.append("-");
+                } else {
+                    sb.append(pecas[i][j].toString());
+                }
+                sb.append(" ");
+            }
+            sb.append("\n");
+        }
+        sb.append("  a b c d e f g h");
+        return sb.toString();
     }
 
     private static void imprimirPecasCapturadas(List<PecaXadrez> capturada) {
