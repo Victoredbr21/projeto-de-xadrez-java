@@ -8,6 +8,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.List;
 
 /**
  * Jogador IA usando a API do Google Gemini (modelo gemini-2.0-flash).
@@ -17,8 +18,8 @@ import java.time.Duration;
  */
 public class GeminiPlayer implements AIPlayer {
 
-    private static final String BASE_URL   = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-    private static final String NOME       = "Gemini (Flash 2.0)";
+    private static final String BASE_URL    = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+    private static final String NOME        = "Gemini (Flash 2.0)";
     private static final long   COOLDOWN_MS = 2000L;
     private static final int    TIMEOUT_S   = 30;
     private static final int    MAX_RETRIES = 3;
@@ -43,39 +44,80 @@ public class GeminiPlayer implements AIPlayer {
 
     @Override
     public PosicaoXadrez[] getMove(String boardState, PartidaXadrez partida) throws AIException {
-        String prompt = buildPrompt(boardState, partida);
-        String raw    = callWithRetry(prompt);
-        return MoveParser.parse(raw);
+        String prompt = buildPrompt(boardState, partida, null);
+        return callWithRetry(prompt, boardState, partida);
     }
 
     // -------------------------------------------------------------------------
     // Prompt
     // -------------------------------------------------------------------------
 
-    private String buildPrompt(String boardState, PartidaXadrez partida) {
-        return "Você está jogando xadrez como as peças " + partida.getJogadorAtual() + ".\n"
-             + "Estado atual do tabuleiro:\n"
-             + boardState + "\n"
-             + "Turno: " + partida.getTurno() + " | Em xeque: " + partida.isCheck() + "\n"
-             + "Retorne SOMENTE a jogada no formato: origem destino (ex: e2 e4).\n"
-             + "Não escreva mais nada além da jogada. Exemplo de resposta válida: d1 h5";
+    private String buildPrompt(String boardState, PartidaXadrez partida, String jogadaInvalidaAnterior) {
+        List<PosicaoXadrez> fontes = partida.getFontesDisponiveis();
+        StringBuilder origens = new StringBuilder();
+        for (PosicaoXadrez pos : fontes) {
+            origens.append(pos.toString()).append(" ");
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Você é um motor de xadrez. Sua única função é retornar uma jogada legal.\n\n");
+        sb.append("ESTADO DO TABULEIRO (colunas a-h, linhas 1-8):\n");
+        sb.append(boardState).append("\n\n");
+        sb.append("INFORMAÇÕES DO TURNO:\n");
+        sb.append("- Você joga com as peças: ").append(partida.getJogadorAtual()).append("\n");
+        sb.append("- Número do turno: ").append(partida.getTurno()).append("\n");
+        sb.append("- Está em xeque: ").append(partida.isCheck()).append("\n\n");
+        sb.append("PEÇAS QUE VOCÊ PODE MOVER AGORA: ").append(origens.toString().trim()).append("\n\n");
+        sb.append("REGRAS QUE VOCÊ DEVE OBEDECER:\n");
+        sb.append("1. A casa de ORIGEM deve ser uma das listadas em 'PEÇAS QUE VOCÊ PODE MOVER AGORA' — nenhuma outra.\n");
+        sb.append("2. A casa de DESTINO deve ser um movimento legal dessa peça.\n");
+        sb.append("3. Se estiver em xeque, você OBRIGATORIAMENTE deve sair do xeque.\n");
+        sb.append("4. Não capture seu próprio rei nem mova para casa ocupada pela sua cor.\n");
+        sb.append("5. Peão só avança, nunca recua. Captura apenas na diagonal.\n");
+        sb.append("6. Cavalo se move em L (2+1) e pode pular outras peças.\n");
+        sb.append("7. Torre, Bispo e Rainha não podem passar por cima de outras peças.\n\n");
+
+        if (jogadaInvalidaAnterior != null) {
+            sb.append("ATENÇÃO: Sua tentativa anterior '").append(jogadaInvalidaAnterior)
+              .append("' foi INVÁLIDA. Escolha uma jogada diferente usando apenas as origens listadas acima.\n\n");
+        }
+
+        sb.append("FORMATO OBRIGATÓRIO DA RESPOSTA:\n");
+        sb.append("- Retorne SOMENTE duas coordenadas separadas por espaço: origem destino\n");
+        sb.append("- Exemplo válido: e2 e4\n");
+        sb.append("- Exemplo válido: g1 f3\n");
+        sb.append("- NÃO escreva mais NADA. Sem explicação, sem pontuação, sem texto adicional.\n");
+        sb.append("- Se escrever qualquer coisa além da jogada, sua resposta será rejeitada.");
+
+        return sb.toString();
     }
 
     // -------------------------------------------------------------------------
-    // HTTP com retry
+    // HTTP com retry contextual
     // -------------------------------------------------------------------------
 
-    private String callWithRetry(String prompt) throws AIException {
+    private PosicaoXadrez[] callWithRetry(String promptInicial, String boardState, PartidaXadrez partida) throws AIException {
+        String ultimaJogadaInvalida = null;
         int attempt = 0;
+
         while (true) {
             attempt++;
+            String prompt = (attempt == 1)
+                    ? promptInicial
+                    : buildPrompt(boardState, partida, ultimaJogadaInvalida);
             try {
                 Thread.sleep(COOLDOWN_MS);
-                return callAPI(prompt);
+                String raw = callAPI(prompt);
+                return MoveParser.parse(raw);
             } catch (AIRateLimitException e) {
                 if (attempt >= MAX_RETRIES) throw e;
                 System.out.println("[" + NOME + "] " + e.getMessage() + " (tentativa " + attempt + "/" + MAX_RETRIES + ")");
                 sleep(e.getRetryAfterMs());
+            } catch (AIBadRequestException e) {
+                // jogada mal formatada — tenta de novo com feedback
+                if (attempt >= MAX_RETRIES) throw e;
+                ultimaJogadaInvalida = e.getMessage();
+                System.out.println("[" + NOME + "] Jogada inválida, tentando novamente (" + attempt + "/" + MAX_RETRIES + ")");
             } catch (AIException e) {
                 throw e;
             } catch (InterruptedException e) {
@@ -128,7 +170,7 @@ public class GeminiPlayer implements AIPlayer {
             case 429: {
                 long retryMs = response.headers().firstValueAsLong("retry-after")
                         .map(s -> s * 1000L)
-                        .orElse(8000L); // Gemini free tier sugere esperar mais
+                        .orElse(8000L);
                 throw new AIRateLimitException(NOME, retryMs);
             }
             case 500: case 502: case 503:
@@ -143,7 +185,6 @@ public class GeminiPlayer implements AIPlayer {
     // -------------------------------------------------------------------------
 
     private String extractContent(String json) throws AIException {
-        // Gemini retorna: {"candidates":[{"content":{"parts":[{"text":"e2 e4"}]}}]}
         int idx = json.indexOf("\"text\":");
         if (idx == -1) throw new AIException(NOME + ": campo 'text' não encontrado na resposta: " + json);
         int start = json.indexOf('"', idx + 7) + 1;
