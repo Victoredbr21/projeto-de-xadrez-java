@@ -63,6 +63,26 @@ public class PartidaXadrez {
         return tabuleiro.peca(posicao).possiveisMovimentos();
     }
 
+    /**
+     * Retorna a lista de PosicaoXadrez (ex: "e2", "g1") das peças do jogador atual
+     * que possuem pelo menos um movimento legal disponível.
+     * Usado pelo prompt das IAs para restringir as origens válidas.
+     */
+    public List<PosicaoXadrez> getFontesDisponiveis() {
+        List<PosicaoXadrez> fontes = new ArrayList<>();
+        pecasNoTabuleiro.stream()
+                .filter(p -> ((PecaXadrez) p).getCor() == jogadorAtual)
+                .filter(p -> p.ePossivelMover())
+                .forEach(p -> {
+                    Posicao pos = localizarPeca(p);
+                    fontes.add(new PosicaoXadrez(
+                            (char) ('a' + pos.getColuna()),
+                            8 - pos.getLinha()
+                    ));
+                });
+        return fontes;
+    }
+
     // ===================================================
     // EXECUÇÃO DO MOVIMENTO
     // ===================================================
@@ -85,14 +105,11 @@ public class PartidaXadrez {
         PecaXadrez pecaMovida = (PecaXadrez) tabuleiro.peca(target);
 
         // --- promoção do peão ---
-        // se o peão chegou na última linha, fica guardado em promovido
-        // a UI vai chamar substituirPecaPromovida() com a escolha do jogador
         promovido = null;
         if (pecaMovida instanceof Peao) {
             if ((pecaMovida.getCor() == Cor.BRANCO && target.getLinha() == 0) ||
                     (pecaMovida.getCor() == Cor.PRETO && target.getLinha() == 7)) {
                 promovido = pecaMovida;
-                // por padrão promove pra Rainha — a UI pode substituir depois
                 substituirPecaPromovida("Q");
             }
         }
@@ -100,7 +117,6 @@ public class PartidaXadrez {
         // --- en passant: marca o peão vulnerável ---
         enPassantVulneravel = null;
         if (pecaMovida instanceof Peao && Math.abs(target.getLinha() - fonte.getLinha()) == 2) {
-            // peão avançou 2 casas — fica vulnerável ao en passant no próximo turno
             enPassantVulneravel = (Peao) pecaMovida;
             enPassantVulneravel.setEnPassantVulneravel(true);
         }
@@ -117,8 +133,6 @@ public class PartidaXadrez {
         return (PecaXadrez) pecaCapturada;
     }
 
-    // substitui o peão promovido pela peça escolhida pelo jogador
-    // tipo: "Q" = Rainha, "T" = Torre, "B" = Bispo, "C" = Cavalo
     public PecaXadrez substituirPecaPromovida(String tipo) {
         if (promovido == null) {
             throw new IllegalStateException("Não há peça para promover");
@@ -197,26 +211,23 @@ public class PartidaXadrez {
             pecasCapturadas.add(pecaCapturada);
         }
 
-        // --- roque pequeno ---
-        // Rei moveu 2 casas pra direita — move a Torre junto
+        // roque pequeno
         if (p instanceof Rei && target.getColuna() == fonte.getColuna() + 2) {
-            Posicao fonteT = new Posicao(fonte.getLinha(), fonte.getColuna() + 3);
+            Posicao fonteT  = new Posicao(fonte.getLinha(), fonte.getColuna() + 3);
             Posicao targetT = new Posicao(fonte.getLinha(), fonte.getColuna() + 1);
             PecaXadrez torre = (PecaXadrez) tabuleiro.removePeca(fonteT);
             tabuleiro.lugarDaPeca(torre, targetT);
         }
 
-        // --- roque grande ---
-        // Rei moveu 2 casas pra esquerda — move a Torre junto
+        // roque grande
         if (p instanceof Rei && target.getColuna() == fonte.getColuna() - 2) {
-            Posicao fonteT = new Posicao(fonte.getLinha(), fonte.getColuna() - 4);
+            Posicao fonteT  = new Posicao(fonte.getLinha(), fonte.getColuna() - 4);
             Posicao targetT = new Posicao(fonte.getLinha(), fonte.getColuna() - 1);
             PecaXadrez torre = (PecaXadrez) tabuleiro.removePeca(fonteT);
             tabuleiro.lugarDaPeca(torre, targetT);
         }
 
-        // --- en passant ---
-        // peão capturou na diagonal mas a casa estava vazia — remove o peão capturado
+        // en passant
         if (p instanceof Peao && fonte.getColuna() != target.getColuna() && pecaCapturada == null) {
             Posicao posicaoPeao = (p.getCor() == Cor.BRANCO)
                     ? new Posicao(target.getLinha() + 1, target.getColuna())
@@ -241,7 +252,7 @@ public class PartidaXadrez {
 
         // desfaz roque pequeno
         if (p instanceof Rei && target.getColuna() == fonte.getColuna() + 2) {
-            Posicao fonteT = new Posicao(fonte.getLinha(), fonte.getColuna() + 3);
+            Posicao fonteT  = new Posicao(fonte.getLinha(), fonte.getColuna() + 3);
             Posicao targetT = new Posicao(fonte.getLinha(), fonte.getColuna() + 1);
             PecaXadrez torre = (PecaXadrez) tabuleiro.removePeca(targetT);
             tabuleiro.lugarDaPeca(torre, fonteT);
@@ -249,7 +260,7 @@ public class PartidaXadrez {
 
         // desfaz roque grande
         if (p instanceof Rei && target.getColuna() == fonte.getColuna() - 2) {
-            Posicao fonteT = new Posicao(fonte.getLinha(), fonte.getColuna() - 4);
+            Posicao fonteT  = new Posicao(fonte.getLinha(), fonte.getColuna() - 4);
             Posicao targetT = new Posicao(fonte.getLinha(), fonte.getColuna() - 1);
             PecaXadrez torre = (PecaXadrez) tabuleiro.removePeca(targetT);
             tabuleiro.lugarDaPeca(torre, fonteT);
@@ -310,8 +321,6 @@ public class PartidaXadrez {
     private void proximoTurno() {
         turno++;
         jogadorAtual = (jogadorAtual == Cor.BRANCO) ? Cor.PRETO : Cor.BRANCO;
-        // reseta en passant do turno anterior
-        // só vale por 1 turno — se não capturou, perdeu a chance
         pecasNoTabuleiro.stream()
                 .filter(x -> x instanceof Peao && ((Peao) x).isEnPassantVulneravel())
                 .forEach(x -> ((Peao) x).setEnPassantVulneravel(false));
